@@ -29,8 +29,8 @@ The file 'robust.clustering.metagenomics_callsExampleDatasets.r' includes cases 
   INPUTS:
   1. **path**: where the phyloseq object RData file is. 
   2. **RDataOrBiomFile**: the phyloseq object or the biom file.
-      2.a. If it is a RData file, the phyloseq object must call 'data.norm' and it must have its OTU counts already normalized!!
-      2.b. If it is a .biom file, the 5th argument is also required, because the .biom file will have only the OTU counts, which must be already normalized too!!
+    1. If it is a RData file, the phyloseq object must call 'data.norm' and it must have its OTU counts already normalized!!
+    2. If it is a .biom file, the 5th argument is also required, because the .biom file will have only the OTU counts, which must be already normalized too!!
   3. **dataset.name**: used as label and suffix of files. Example: 'David2014', 'Chicks', etc.
   4. **variable.in.PCoAgraph**: name of a variable from sample_variables() in the phyloseq object, for the color of the samples in the PCoAgraph.
   5. [Optional: **mapBiomFile**: Mappping file instructions (only if biom format, else mapping info is included in the phyloseq object): comma separated values file, with samples in rows, being the first column the sampleID, and the remainder with their corresponding headers in the first row. The name to color the PCoA graphs must be one of these column headers within this mapping file.]
