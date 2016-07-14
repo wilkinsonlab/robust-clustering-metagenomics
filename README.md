@@ -15,10 +15,10 @@ From an interactive R session:
 source('robust.clustering.metagenomics.functions.r')
 
 # Example of call to the whole pipeline (with phyloseq object in a R data file):
-robust.clustering.all.steps("RobustClustering/David2014","RobustClustering/David2014/data.norm_David2014.RData",'David2014',"COLLECTION_DAY")
+robust.clustering.all.steps("~/RobustClustering/David2014","~/RobustClustering/David2014/data.norm_David2014.RData",'David2014',"COLLECTION_DAY")
 
 # Or with .biom file:
-robust.clustering.all.steps("RobustClustering/David2014","RobustClustering/David2014/David2014.biom",'David2014',"COLLECTION_DAY","RobustClustering/David2014/mapping_David2014.tsv")
+robust.clustering.all.steps("~/RobustClustering/David2014","~/RobustClustering/David2014/David2014.biom",'David2014',"COLLECTION_DAY","~/RobustClustering/David2014/mapping_David2014.tsv")
 ```
 
 The file 'robust.clustering.metagenomics_callsExampleDatasets.r' includes cases of use of the different functions of the pipeline, both at high and low levels.
