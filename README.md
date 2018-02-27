@@ -1,13 +1,13 @@
 # Robust Clustering Metagenomics
 
-This pipeline, implemented in R, corresponds to an algorithm to automatically identify a reliable set of states/clusters in longitudinal microbiome datasets. It is a generic and domain-independent procedure, applicable to whatever microbiome dataset.
+This pipeline, implemented in R, corresponds to an algorithm to automatically identify a reliable set of sub-states in longitudinal microbiome datasets. It is a generic and domain-independent procedure, applicable to whatever microbiome dataset.
 
-The input are Operational Taxonomic Unit (OTU) vectors (in phyloseq or biom format, as it is explained below). The key consideration for grouping similar OTU vectors is according to Machine Learning clustering approaches, taking a metagenomics beta diversity metric as the distance measure between samples. The procedure robustly defines the optimal number of clusters based on a comparison between several distance measures, distinct algorithms and different clustering scores. The variable factors that are combined to generate the robustness of our algorithm include: five different distance measures (JSD, rJSD, Bray-Curtis, Morisita-Horn and Kulczynski), two clustering scored (SI and Prediction Strength (PS) scores) followed by an additional bootstrapping process (evaluated with the Jaccard similarity score), and two distinct clustering approaches (PAM and Hclust).
+The input are Operational Taxonomic Unit (OTU) vectors (in phyloseq or biom format, as it is explained below). The key consideration for grouping similar OTU vectors is according to Machine Learning clustering approaches, taking metagenomics beta diversity metrics as distance measures between samples. The procedure robustly defines the optimal number of clusters based on a comparison between several distance measures, distinct algorithms and different clustering scores. The variable factors that are combined to generate the robustness of our algorithm include: five different distance measures (JSD, rJSD, Bray-Curtis, Morisita-Horn and Kulczynski), two clustering scored (SI and Prediction Strength (PS) scores) followed by an additional bootstrapping process (evaluated with the Jaccard similarity score), and two distinct clustering approaches (PAM and Hclust). Additionally, different subsets of taxa could be considered ({all, dominant, non-dominant} x {species, genus level}.
 
 
 ## Basic Usage ##
 
-Assuming all the required packages are already installed. You may need to download and install a missing dependency.
+Assuming all the required packages are already installed. You may need to download and install some missing dependencies.
 
 From an interactive R session:
 ```r
