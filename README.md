@@ -45,5 +45,4 @@ OUTPUTS:
   - phyloseq object with a new variable in the phyloseq object ($cluster) with the cluster identifier per sample. This object also is saved in 'data.normAndDist\_definitiveClustering\_\<dataset.label\>.RData'. It could be used as input of other R scripts with posterior steps of microbiome dynamics analysis.
   - The pipeline also returns several text and graph files with the results.
 
-
-
+Our output data files are available at Zenodo: http://doi.org/10.5281/zenodo.167376
