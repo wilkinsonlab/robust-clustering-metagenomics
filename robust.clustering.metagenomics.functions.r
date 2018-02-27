@@ -23,12 +23,15 @@ write.silhouette.output <- function(ssi=NULL,si=NULL,fileName=NULL){
   #if(is.na(si)){
   #  print('Only 1 cluster!!!!')  
   #}else{
+  if(si==0){
+    print('Only 1 cluster!!!!')
+  }else{
     print(ssi)
     print('Sd. among clusters: ')
     print(sd(ssi$clus.avg.widths))
     print('Sd. among samples: ')
     print(sd(si[,"sil_width"]))
-  #} # end-if
+  } # end-if
   sink()
 } #end-function write.silhouette.output
 
@@ -112,6 +115,161 @@ plot.robust.clustering.all.together.formatted <- function(eval.array4d){
 } #end-function-plot.robust.clustering.all.together.formatted
 
 
+################################################################
+### Function plot.robust.clustering.onlyPAM.formatted        ###
+################################################################
+# Plots different summary graphs, with the results of the different clustering procedures,
+# combined in one output file (robustClustering_allTogether_formatted.pdf).
+#
+# Args:
+#   eval.array4d: 4-dimensions array with clustering results, returned by robust.clustering() function.
+plot.robust.clustering.onlyPAM.formatted <- function(eval.array4d){
+  library(grid)  
+  library(gridExtra)  
+  #library(cowplot)  
+  
+  plots<- list()
+  # To join in a data.frame the selected metrics for each graph:
+  #for (alg in c('pam','hclust')){
+  alg='pam'
+    for (score in c('SI','PS','Jaccard')){
+      assFrame <- NULL
+      assFrame <- data.frame(k=2:10, JSD=eval.array4d[,score,'jsd',alg], rJSD=eval.array4d[,score,'rjsd',alg], BrayCurtis=eval.array4d[,score,'bray',alg], MorisitaHorn=eval.array4d[,score,'horn',alg], Kulczynski=eval.array4d[,score,'kulczynski',alg])
+      assFrame <- melt(assFrame, id.vars=c("k"), variable.name="metric", value.name="score")
+      gp <-NULL
+      if(score=='SI'){
+        gp <- (ggplot(assFrame, aes(x=k, y=score, color=metric)) +
+                 geom_point(aes(shape=metric),size=3) + geom_line(aes(linetype=metric),size=0.75) +
+                 theme_bw() + # background grey to white, and re-initialize all associated parameters
+                 scale_x_continuous(breaks=2:10, labels=2:10) +
+                 coord_cartesian(ylim = c(0,1)) +
+                 geom_hline(yintercept = 0.25, linetype=2, size=1) + 
+                 geom_hline(yintercept = 0.50, linetype=2, size=1) + 
+                 ggtitle(paste(toupper(alg),score,sep=' - ')) +
+                 theme(text = element_text(size = 20)) # increase all font size
+               # + geom_errorbar(aes(x = 3, y = 0.9, ymin = 0.9 - sd, ymax = 0.9 + sd), colour = 'red', width = 0.4)
+        ) #end-gplot
+      }else if(score=="PS"){
+        gp <- (ggplot(assFrame, aes(x=k, y=score, color=metric)) +
+                 theme_bw() +
+                 geom_point(aes(shape=metric),size=3) + geom_line(aes(linetype=metric),size=0.75) +
+                 scale_x_continuous(breaks=2:10, labels=2:10) +
+                 coord_cartesian(ylim = c(0,1)) +
+                 geom_hline(yintercept = 0.8, linetype=2, size=1) + 
+                 ggtitle(paste(toupper(alg),score,sep=' - ')) +
+                 theme(text = element_text(size = 20))
+        ) #end-gplot
+      }else{
+        gp <- (ggplot(assFrame, aes(x=k, y=score, color=metric)) +
+                 theme_bw() +
+                 geom_point(aes(shape=metric),size=3) + geom_line(aes(linetype=metric),size=0.75) +
+                 scale_x_continuous(breaks=2:10, labels=2:10) +
+                 coord_cartesian(ylim = c(0,1)) +
+                 geom_hline(yintercept = 0.75, linetype=2, size=1) + 
+                 ggtitle(paste(toupper(alg),score,sep=' - ')) +
+                 theme(text = element_text(size = 20))
+        ) #end-gplot
+      } # end-if
+      plots=c(plots,list(gp))
+    } #end-for-score
+  #} #end-for-alg
+  
+  # Print one combined legend at the bottom.
+  pdf("robustClustering_onlyPAM_formatted.pdf",width=12,height=4)
+  g <- ggplotGrob(plots[[1]] + theme(legend.position="bottom"))$grobs
+  legend <- g[[which(sapply(g, function(x) x$name) == "guide-box")]]
+  lheight <- sum(legend$height)
+  lwidth <- sum(legend$width)
+  
+  gl <- lapply(plots, function(x) x + theme(legend.position="none"))
+  gl=c(gl,list(nrow=1))
+  combined<-arrangeGrob(do.call(arrangeGrob, gl),
+                        legend,
+                        ncol = 1,
+                        nrow = 2,
+                        heights = unit.c(unit(1, "npc") - lheight, lheight))
+  grid.draw(combined)
+  dev.off()
+  #graphics.off()
+} #end-function-plot.robust.clustering.onlyPAM.formatted
+
+################################################################
+### Function plot.robust.clustering.onlyHCLUST.formatted     ###
+################################################################
+# Plots different summary graphs, with the results of the different clustering procedures,
+# combined in one output file (robustClustering_allTogether_formatted.pdf).
+#
+# Args:
+#   eval.array4d: 4-dimensions array with clustering results, returned by robust.clustering() function.
+plot.robust.clustering.onlyHCLUST.formatted <- function(eval.array4d){
+  library(grid)  
+  library(gridExtra)  
+  #library(cowplot)  
+  
+  plots<- list()
+  # To join in a data.frame the selected metrics for each graph:
+  #for (alg in c('pam','hclust')){
+  alg='hclust'
+  for (score in c('SI','PS','Jaccard')){
+    assFrame <- NULL
+    assFrame <- data.frame(k=2:10, JSD=eval.array4d[,score,'jsd',alg], rJSD=eval.array4d[,score,'rjsd',alg], BrayCurtis=eval.array4d[,score,'bray',alg], MorisitaHorn=eval.array4d[,score,'horn',alg], Kulczynski=eval.array4d[,score,'kulczynski',alg])
+    assFrame <- melt(assFrame, id.vars=c("k"), variable.name="metric", value.name="score")
+    gp <-NULL
+    if(score=='SI'){
+      gp <- (ggplot(assFrame, aes(x=k, y=score, color=metric)) +
+               geom_point(aes(shape=metric),size=3) + geom_line(aes(linetype=metric),size=0.75) +
+               theme_bw() + # background grey to white, and re-initialize all associated parameters
+               scale_x_continuous(breaks=2:10, labels=2:10) +
+               coord_cartesian(ylim = c(0,1)) +
+               geom_hline(yintercept = 0.25, linetype=2, size=1) + 
+               geom_hline(yintercept = 0.50, linetype=2, size=1) + 
+               ggtitle(paste(toupper(alg),score,sep=' - ')) +
+               theme(text = element_text(size = 20)) # increase all font size
+             # + geom_errorbar(aes(x = 3, y = 0.9, ymin = 0.9 - sd, ymax = 0.9 + sd), colour = 'red', width = 0.4)
+      ) #end-gplot
+    }else if(score=="PS"){
+      gp <- (ggplot(assFrame, aes(x=k, y=score, color=metric)) +
+               theme_bw() +
+               geom_point(aes(shape=metric),size=3) + geom_line(aes(linetype=metric),size=0.75) +
+               scale_x_continuous(breaks=2:10, labels=2:10) +
+               coord_cartesian(ylim = c(0,1)) +
+               geom_hline(yintercept = 0.8, linetype=2, size=1) + 
+               ggtitle(paste(toupper(alg),score,sep=' - ')) +
+               theme(text = element_text(size = 20))
+      ) #end-gplot
+    }else{
+      gp <- (ggplot(assFrame, aes(x=k, y=score, color=metric)) +
+               theme_bw() +
+               geom_point(aes(shape=metric),size=3) + geom_line(aes(linetype=metric),size=0.75) +
+               scale_x_continuous(breaks=2:10, labels=2:10) +
+               coord_cartesian(ylim = c(0,1)) +
+               geom_hline(yintercept = 0.75, linetype=2, size=1) + 
+               ggtitle(paste(toupper(alg),score,sep=' - ')) +
+               theme(text = element_text(size = 20))
+      ) #end-gplot
+    } # end-if
+    plots=c(plots,list(gp))
+  } #end-for-score
+  #} #end-for-alg
+  
+  # Print one combined legend at the bottom.
+  pdf("robustClustering_onlyHCLUST_formatted.pdf",width=12,height=4)
+  g <- ggplotGrob(plots[[1]] + theme(legend.position="bottom"))$grobs
+  legend <- g[[which(sapply(g, function(x) x$name) == "guide-box")]]
+  lheight <- sum(legend$height)
+  lwidth <- sum(legend$width)
+  
+  gl <- lapply(plots, function(x) x + theme(legend.position="none"))
+  gl=c(gl,list(nrow=1))
+  combined<-arrangeGrob(do.call(arrangeGrob, gl),
+                        legend,
+                        ncol = 1,
+                        nrow = 2,
+                        heights = unit.c(unit(1, "npc") - lheight, lheight))
+  grid.draw(combined)
+  dev.off()
+  #graphics.off()
+} #end-function-plot.robust.clustering.onlyHCLUST.formatted
 
 ####################################
 ### Function robust.clustering   ###
@@ -160,6 +318,21 @@ robust.clustering <- function(data.norm=NULL,var.color=NULL,label=NULL){
     }else{
       dist <- distance(otu_table(data.norm),method=distanceMethod)
     }
+    # Replace 'NaN' by average column and row, to avoid error in pam() with 'NaN'
+    if(sum(is.nan(dist))>0){
+      dist.mat=as.matrix(dist)
+      for(i in 1:nrow(dist.mat)){
+        for(j in 1:ncol(dist.mat)){
+          if(is.nan(dist.mat[i,j])){
+            # -2 to remove diagonal (always 0) and 'NaN' column
+            mean.row=sum(dist.mat[i,],na.rm=TRUE)/(ncol(dist.mat)-2)
+            mean.col=sum(dist.mat[,j],na.rm=TRUE)/(nrow(dist.mat)-2)
+            dist.mat[i,j]=mean(c(mean.row,mean.col))
+          } # end-if is.nan
+        } # end-for cols
+      } # end-for rows
+      dist=as.dist(dist.mat)
+    } # end-if nan
     save(dist,file=paste('dist_',distanceMethod,'.RData',sep=''))
     # Distance plot
     pdf(paste("sampleDistribution_",ntaxa(data.norm),"taxa_ordinateMDS_distance_",distanceMethod,".pdf",sep=''),width=10)
@@ -223,8 +396,12 @@ robust.clustering <- function(data.norm=NULL,var.color=NULL,label=NULL){
              pam={
                fit <- pamk(dist,krange=2:10,diss=TRUE)
                k <- fit$nc
-               # Once the k value is selected, to compute si with silhouette() method to be comparable with the remainder runs, to avoid the re-ordering of the sample columns, with the corresponding wrong assignments of cluster number to each sample.
-               si <- silhouette(fit$pamobject$clustering,dist)
+               if(k==1){
+                si <- 0 
+               }else{
+                # Once the k value is selected, to compute si with silhouette() method to be comparable with the remainder runs, to avoid the re-ordering of the sample columns, with the corresponding wrong assignments of cluster number to each sample.
+                si <- silhouette(fit$pamobject$clustering,dist)
+               }
              }, # end-pam
              hclust={ 
                fit <- hclust(dist,method="average")
@@ -259,9 +436,8 @@ robust.clustering <- function(data.norm=NULL,var.color=NULL,label=NULL){
 ###########################################
 # Automatically decides the grouping in states/clusters. According the following
 # criteria:
-#   1.- to select the “k” with the  highest SI (in 2-10) in 2 measures
-#   2.- to check if this “k” value pass the PS limits to be robust
-#   3.- to check if those “k” clusters are stable according Jaccard threshold from bootstrapping process
+#   a.- to select the “k” with the highest average SI (in 2-10) in 2 measures
+#   b.- to check if this “k” value pass the PS limits (i.e. to be robust) or if those “k” clusters are stable according Jaccard threshold from bootstrapping process
 #
 # Args:
 #  data.now: phyloseq object, with all samples and OTU information.
@@ -272,70 +448,79 @@ robust.clustering <- function(data.norm=NULL,var.color=NULL,label=NULL){
 # Returns:
 #   Phyloseq object with the cluster assigned to each sample, in a new variable.
 robust.clustering.decision <- function(data.now=NULL,eval.array4d=NULL,var.color=NULL,label=NULL){
-  library(modeest,quietly=TRUE) # For compute the mode with mlv()
-  
   thresh.SI <- 0.25
   thresh.PS <- 0.80
   thresh.Jac <- 0.75
   
-  no.agree.methods <- 2
-  
-  # 1.- to select the “k” with the  highest SI (in 2-10) in 2 measures
-  #kbestSI <- array(0,dim=c(1,5),dimnames=list(listlist('jsd','rjsd','bray','horn','kulczynski'))
+  # 1.- Compute the mean of all possible combinations of 2 SI values, per each independent k
+  combi<-combn(c("jsd", "rjsd", "bray", "horn", "kulczynski"),2)
+  avgSI <- array(0,dim=c(9,10),dimnames=list(list('2','3','4','5','6','7','8','9','10'), list('1','2','3','4','5','6','7','8','9','10')))
+  for(k in 2:10){
+    for(i in 1:10){ #10 combinations of methods in combi
+      si1=eval.array4d[as.character(k),'SI',combi[1,i],'pam']
+      si2=eval.array4d[as.character(k),'SI',combi[2,i],'pam']
+      if((si1<thresh.SI) || (si2<thresh.SI)){
+        # Filter combinations of SI measures doesn't pass the SI threshold
+        avgSI[as.character(k),i]=0.0
+      }else{
+        avgSI[as.character(k),i]=mean(c(si1,si2))
+      }
+    } # end-for i
+  } # end-for k
+
+  # 2.- Search the pair of methods with highest average SI, passing PS or Jaccard threshold
   SI.ok <- TRUE
-  kbestSI <- NULL
-  for (distanceMethod in c("jsd", "rjsd", "bray", "horn", "kulczynski")){
-    kbestSI[distanceMethod] <- as.integer(names(which.max(eval.array4d[,'SI',distanceMethod,'pam'])))
-  } # end-for distanceMethod
-  kbestSI.mode <- mlv(kbestSI)[1]
-  kbestSI.mode.char <- as.character(kbestSI.mode)
-  kbestSI.mode.methods <- names(which(kbestSI==kbestSI.mode))
-  # To check if the "k" mode value is higher than the SI threshold in at least two measures
-  kbestSI.mode.methods <- names(eval.array4d[kbestSI.mode.char,'SI',kbestSI.mode.methods,'pam'] >= thresh.SI)
-  if(length(kbestSI.mode.methods) < no.agree.methods){
-    print(paste('ERROR: Not shared k value greater than SI threshold (',thresh.SI,') in at least ',no.agree.methods,' distance methods!!',sep=''))
-    SI.ok <- FALSE
-  } # end-if k > SI.thresh in >= no.agree.methods (i.e. 2) measures
-  
-  # 2.- to check if this “k” value pass the PS limits to be robust (in the selected 2 measures)
-  PS.ok <- TRUE
-  if(SI.ok){
-    # To check if the "k" mode value is higher than the PS threshold in at least two measures
-    kbestSI.mode.methods <- names(eval.array4d[kbestSI.mode.char,'PS',kbestSI.mode.methods,'pam'] >= thresh.PS)
-    if(length(kbestSI.mode.methods) < no.agree.methods){
-      print(paste('ERROR: Not shared k value greater than PS threshold (',thresh.PS,') in at least ',no.agree.methods,' distance methods!!',sep=''))
-      PS.ok <- FALSE
-    } # end-if k > Ps.thresh in >= no.agree.methods (i.e. 2) measures
-  } # end-if SI.ok
-  
-  # 3.- to check if those “k” clusters are stable according Jaccard threshold from bootstrapping process
-  Jac.ok <- TRUE
-  if((SI.ok)&&(PS.ok)){
-    kbestSI.mode.methods <- names(eval.array4d[kbestSI.mode.char,'Jaccard',kbestSI.mode.methods,'pam'] >= thresh.Jac)
-    if(length(kbestSI.mode.methods) < no.agree.methods){
-      print(paste('ERROR: Not shared k value greater than Jaccard threshold (',thresh.Jac,') in at least ',no.agree.methods,' distance methods!!',sep=''))
-      Jac.ok <- FALSE
-    } # end-if k > Ps.thresh in >= no.agree.methods (i.e. 2) measures
-  } # end-if SI.ok
-  
-  # 4.- When all the criterion are satisfied, the distance measure with the highest SI is selected to apply and return the clustering results in a phyloseq object.
-  if((SI.ok)&&(PS.ok)&&(Jac.ok)){
-    distanceMethod <- names(which.max(eval.array4d[kbestSI.mode.char,'SI',kbestSI.mode.methods,'pam']))
+  PS.ok <- FALSE
+  Jac.ok <- FALSE
+  while((!PS.ok) && (!Jac.ok) && (max(avgSI)>0)){
+  #while(((!PS.ok) || (!Jac.ok)) && max(avgSI>0)){ # Option2: both PS and Jac mandatory
+    #avgSI.sort=sort(avgSI,index.return=TRUE,decreasing=TRUE)
+    #index=avgSI.sort$ix[1]
+    # Alternative way, with only 1 line.
+    # index: position convertion array in a vector, counting first for columns, after for rows
+    index=which(avgSI == max(avgSI))
+    col=ceiling(index/dim(avgSI)[1])
+    row=index%%dim(avgSI)[1]
+    if(row==0){row=dim(avgSI)[1]}
+    bestAvg=avgSI[row,col]
+    print(paste(index,row,col,bestAvg))
+    # save methods which are sources of the mean, to check the other scores
+    kbestSI=as.integer(rownames(avgSI)[row])
+    kbestSI.methods <- combi[,col]
+    # Check if the 2 methods with the best avgSI, for this 'kbestSI', outperform the other scores threshold (> thresh.PS or thresh.Jaccard)
+    PS.ok <- (length(which((eval.array4d[as.character(kbestSI),'PS',kbestSI.methods,'pam'] >= thresh.PS)==TRUE)) == 2)
+    Jac.ok <- (length(which((eval.array4d[as.character(kbestSI),'Jaccard',kbestSI.methods,'pam'] >= thresh.Jac)==TRUE)) == 2) 
+    # If not, to select the next one. To put 0 in the not valid combinations in avgSI, to repeat the loop.
+    if((!PS.ok)&&(!Jac.ok)){
+    #if((!PS.ok)||(!Jac.ok)){ # Option2: both PS and Jac mandatory
+      #print(paste('not valid: ',kbestSI,paste(kbestSI.methods)))
+      avgSI[row,col]=0.0
+    } # end-if PS or Jac ok
+  } # end-while until pair of methods with highest average SI pass PS or Jaccard
+  # If not solution found
+  if(max(avgSI)==0){
+    print(paste('INFO: Not shared k value greater than SI (',thresh.SI,') and PS (',thresh.PS,') or Jaccard threshold (',thresh.Jac,') in at least 2 distance methods!!',sep=''))
+    SI.ok<-FALSE
+  } # end-if not solution
     
+  # 3.- When all the criterion are satisfied, the distance measure with the highest SI is selected to apply and return the clustering results in a phyloseq object.
+  if((SI.ok)&&((PS.ok)||(Jac.ok))){
+  #if((SI.ok)&&((PS.ok)&&(Jac.ok))){ # Option2: both PS and Jac mandatory
+    distanceMethod <- names(which.max(eval.array4d[as.character(kbestSI),'SI',kbestSI.methods,'pam']))
     # Print definitive numerical results in a text file
     sink(paste('definitiveClusteringResults_',label,'.txt',sep=''))
-    cat(paste('No.clusters: ',kbestSI.mode,'\n',sep=''))
+    cat(paste('No.clusters: ',kbestSI,'\n',sep=''))
     cat(paste('Distance Method: ',distanceMethod,'\n',sep=''))
     cat('Clustering algorithm: PAM\n')
-    cat(paste('Assessment score: Average width silhouette: ',eval.array4d[kbestSI.mode.char,'SI',distanceMethod,'pam'],'\n',sep=''))
-    cat(paste('Assessment score: Prediction strength: ',eval.array4d[kbestSI.mode.char,'PS',distanceMethod,'pam'],'\n',sep=''))
-    cat(paste('Assessment score: Jaccard similarity: ',eval.array4d[kbestSI.mode.char,'Jaccard',distanceMethod,'pam'],'\n',sep=''))
+    cat(paste('Assessment score: Average width silhouette: ',eval.array4d[as.character(kbestSI),'SI',distanceMethod,'pam'],'\n',sep=''))
+    cat(paste('Assessment score: Prediction strength: ',eval.array4d[as.character(kbestSI),'PS',distanceMethod,'pam'],'\n',sep=''))
+    cat(paste('Assessment score: Jaccard similarity: ',eval.array4d[as.character(kbestSI),'Jaccard',distanceMethod,'pam'],'\n',sep=''))
     cat('--------------------------\n\n')
     
     # To load pre-computed distances rather than to recompute them
     #dist <- distance(otu_table(data.now),method=distanceMethod)
     load(paste(distanceMethod,'/dist_',distanceMethod,'.RData',sep=''))
-    fit <- pam(dist,kbestSI.mode,diss=TRUE)
+    fit <- pam(dist,kbestSI,diss=TRUE)
     cat('SILHOUETTE RESULTS:\n')
     # IMP: Not silhouette(fit,dist), because the order of the instance is WRONG, and the assignation of cluster_id is WRONG in si[,1], which is assigned to sample_data(data.now)$cluster!!!
     # Thus, row.names(sample_data(data.now)[1:10]) == labels(dist)[1:10] == labels(fitPam$clustering[1:10]) != labels(fitPam[1:10])
@@ -351,36 +536,36 @@ robust.clustering.decision <- function(data.now=NULL,eval.array4d=NULL,var.color
     # Include clusters assignment in phyloseq object
     sample_data(data.now)$cluster<- as.factor(si[1:nsamples(data.now),1])
     sink()
+  
+    # Distance plot with definitive clusters
+    pdf(paste("pcoa_definitiveClustering_",distanceMethod,"_k",kbestSI,"_colorByCluster.pdf",sep=''),width=8)
+    p <- plot_ordination(data.now, ordinate(data.now, "MDS", distance=dist), color='cluster') +
+      geom_point(size=2.5) +
+      theme_bw() +
+      theme(text = element_text(size = 20)) +
+      theme(legend.position="bottom",legend.box="horizontal")
+    print(p)
+    dev.off()
+  
+    pdf(paste("pcoa_definitiveClustering_",distanceMethod,"_k",kbestSI,".pdf",sep=''),width=8)
+    p <- plot_ordination(data.now, ordinate(data.now, "MDS", distance=dist), shape='cluster', color=var.color) +
+      geom_point(size=2.5) +
+      theme_bw() +
+      theme(text = element_text(size = 20)) +
+      theme(legend.position="bottom",legend.box="horizontal")
+    print(p)
+    dev.off()
+  
+    # Write output files
+    data.norm <- data.now
+    #   phyloseq object
+    save(data.norm,dist,file=paste('data.normAndDist_definitiveClustering_',label,'.RData',sep=''))
+    #   <sampleID,cluster> pairs
+    sample_data(data.now)$sampleID <- row.names(sample_data(data.now))
+    df.allVariables <- get_variable(data.now)
+    df.clusterPerSample <- df.allVariables[,c('sampleID','cluster')]
+    write.table(df.clusterPerSample,paste('sampleId-cluster_pairs_',label,'.txt',sep=''),quote=FALSE,sep=',',row.names=FALSE)
   } # end-if all threshold are satisfied
-  
-  # Distance plot with definitive clusters
-  pdf(paste("pcoa_definitiveClustering_",distanceMethod,"_k",kbestSI.mode,"_colorByCluster.pdf",sep=''),width=8)
-  p <- plot_ordination(data.now, ordinate(data.now, "MDS", distance=dist), color='cluster') +
-    geom_point(size=2.5) +
-    theme_bw() +
-    theme(text = element_text(size = 20)) +
-    theme(legend.position="bottom",legend.box="horizontal")
-  print(p)
-  dev.off()
-  
-  pdf(paste("pcoa_definitiveClustering_",distanceMethod,"_k",kbestSI.mode,".pdf",sep=''),width=8)
-  p <- plot_ordination(data.now, ordinate(data.now, "MDS", distance=dist), shape='cluster', color=var.color) +
-    geom_point(size=2.5) +
-    theme_bw() +
-    theme(text = element_text(size = 20)) +
-    theme(legend.position="bottom",legend.box="horizontal")
-  print(p)
-  dev.off()
-  
-  # Write output files
-  data.norm <- data.now
-  #   phyloseq object
-  save(data.norm,dist,file=paste('data.normAndDist_definitiveClustering_',label,'.RData',sep=''))
-  #   <sampleID,cluster> pairs
-  sample_data(data.now)$sampleID <- row.names(sample_data(data.now))
-  df.allVariables <- get_variable(data.now)
-  df.clusterPerSample <- df.allVariables[,c('sampleID','cluster')]
-  write.table(df.clusterPerSample,paste('sampleId-cluster_pairs_',label,'.txt',sep=''),quote=FALSE,sep=',',row.names=FALSE)
   
   return(data.norm)
 } # end-function robust.clustering.decision
@@ -400,12 +585,14 @@ robust.clustering.decision <- function(data.now=NULL,eval.array4d=NULL,var.color
 #     If it is a .biom file, the 5th argument is also required, because the .biom file will have only the OTU counts, which must be already normalized too!!
 #   dataset.name: used as label and suffix of files. Example: 'David2014', 'Chicks', etc.
 #   variable.in.PCoAgraph: name of a variable from sample_variables() in the phyloseq object, for the color of the samples in the PCoAgraph.
+#   taxaSubsetDominant: string to determine if the taxa should be subsetted according to dominant taxa: 'all' (default), 'dominant' or 'non-dominant'
+#   taxaSubsetGenus: string to determine if taxa should be aggregated at genus level: 'no' (default), 'yes' (compatible with dominant/non-dominant in taxaSubsetDominant parameter)
 #   mapBiomFile: Mappping file instructions (only if biom format, else mapping info is included in the phyloseq object): comma separated values file, with samples in rows, being the first column the sampleID, and the remainder with their corresponding headers in the first row. The name to color the PCoA graphs must be one of these column headers within this mapping file.
-# 
+#
 # Returns:
 #   phyloseq object with a new variable in the phyloseq object ($cluster) with the cluster identifier per sample. This object also is saved in 'data.normAndDist_definitiveClustering_<dataset.label>.RData'. It could be used as input of other R scripts with posterior steps of microbiome dynamics analysis.
 #   It also returns several text and graph files with the results.
-robust.clustering.all.steps <- function(path,RDataOrBiomFile,dataset.label,variable.in.PCoAgraph,mapBiomFile){
+robust.clustering.all.steps <- function(path,RDataOrBiomFile,dataset.label,variable.in.PCoAgraph,taxaSubsetDominant='all',taxaSubsetGenus='genus',mapBiomFile){
   # Load libraries
   library(ggplot2,quietly=TRUE)
   library(phyloseq,quietly=TRUE)
@@ -424,6 +611,24 @@ robust.clustering.all.steps <- function(path,RDataOrBiomFile,dataset.label,varia
     data.norm <- merge_phyloseq(biom.otu,map)
   } # end-if RData or biom
   setwd(path)
+  
+  # Taxa subset
+  if(taxaSubsetGenus=='genus'){
+    data.norm.genus=tax_glom(data.norm,taxrank="Genus")
+    data.norm<-data.norm.genus
+  } # end-if genus taxa
+  switch(taxaSubsetDominat, 
+    dominant={
+      data.norm.dominant=prune_taxa((taxa_sums(data.norm)/sum(otu_table(data.norm)))>=0.01,data.norm)
+      data.norm=data.norm.dominant
+    },
+    non-dominant={
+      data.norm.nonDominant=prune_taxa((taxa_sums(data.norm)/sum(otu_table(data.norm)))<0.01,data.norm)
+      data.norm=data.norm.nonDominant
+    }
+  ) # end-switch dominant/non-dominant taxa
+  
+  # Clustering computation
   array4d.results <- robust.clustering(data.norm,variable.in.PCoAgraph,dataset.label)
 
   # B) PLOT GRAPHS
