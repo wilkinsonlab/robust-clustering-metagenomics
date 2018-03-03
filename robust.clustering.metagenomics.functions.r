@@ -585,8 +585,8 @@ robust.clustering.decision <- function(data.now=NULL,eval.array4d=NULL,var.color
 #     If it is a .biom file, the 5th argument is also required, because the .biom file will have only the OTU counts, which must be already normalized too!!
 #   dataset.name: used as label and suffix of files. Example: 'David2014', 'Chicks', etc.
 #   variable.in.PCoAgraph: name of a variable from sample_variables() in the phyloseq object, for the color of the samples in the PCoAgraph.
-#   taxaSubsetDominant: string to determine if the taxa should be subsetted according to dominant taxa: 'all' (default), 'dominant' or 'non-dominant'
-#   taxaSubsetGenus: string to determine if taxa should be aggregated at genus level: 'no' (default), 'yes' (compatible with dominant/non-dominant in taxaSubsetDominant parameter)
+#   taxaSubsetDominant: string to determine if the taxa should be subsetted according to dominant taxa: 'all' (default), 'dominant' or 'nonDominant'
+#   taxaSubsetGenus: string to determine if taxa should be aggregated at genus level: 'no' (default), 'yes' (compatible with dominant/nonDominant in taxaSubsetDominant parameter)
 #   mapBiomFile: Mappping file instructions (only if biom format, else mapping info is included in the phyloseq object): comma separated values file, with samples in rows, being the first column the sampleID, and the remainder with their corresponding headers in the first row. The name to color the PCoA graphs must be one of these column headers within this mapping file.
 #
 # Returns:
@@ -617,16 +617,16 @@ robust.clustering.all.steps <- function(path,RDataOrBiomFile,dataset.label,varia
     data.norm.genus=tax_glom(data.norm,taxrank="Genus")
     data.norm<-data.norm.genus
   } # end-if genus taxa
-  switch(taxaSubsetDominat, 
+  switch(taxaSubsetDominant, 
     dominant={
       data.norm.dominant=prune_taxa((taxa_sums(data.norm)/sum(otu_table(data.norm)))>=0.01,data.norm)
       data.norm=data.norm.dominant
     },
-    non-dominant={
+    nonDominant={
       data.norm.nonDominant=prune_taxa((taxa_sums(data.norm)/sum(otu_table(data.norm)))<0.01,data.norm)
       data.norm=data.norm.nonDominant
     }
-  ) # end-switch dominant/non-dominant taxa
+  ) # end-switch dominant/nonDominant taxa
   
   # Clustering computation
   array4d.results <- robust.clustering(data.norm,variable.in.PCoAgraph,dataset.label)
