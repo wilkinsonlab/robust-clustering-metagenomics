@@ -30,15 +30,15 @@ robust.clustering.all.steps("~/RobustClustering/LaRosa2014","~/RobustClustering/
 
 # Calls for taxa subset, with David2014 dataset:
 # Subset dominant taxa:
-robust.clustering.all.steps("~/RobustClustering/David2014","~/RobustClustering/David2014/data.norm_David2014.RData",'David2014',"COLLECTION_DAY",'dominant')
+robust.clustering.all.steps("~/RobustClustering/David2014","~/RobustClustering/David2014/data.norm_David2014.RData",'David2014',"COLLECTION_DAY",'dominant',percDominant=1)
 # Subset nonDominant taxa:
-robust.clustering.all.steps("~/RobustClustering/David2014","~/RobustClustering/David2014/data.norm_David2014.RData",'David2014',"COLLECTION_DAY",'nonDominant')
+robust.clustering.all.steps("~/RobustClustering/David2014","~/RobustClustering/David2014/data.norm_David2014.RData",'David2014',"COLLECTION_DAY",'nonDominant',percDominant=1)
 # Subset all taxa at genes level:
-robust.clustering.all.steps("~/RobustClustering/David2014","~/RobustClustering/David2014/data.norm_David2014.RData",'David2014',"COLLECTION_DAY",'all','genus')
+robust.clustering.all.steps("~/RobustClustering/David2014","~/RobustClustering/David2014/data.norm_David2014.RData",'David2014',"COLLECTION_DAY",'all',taxaSubsetGenus='yes')
 # Subset dominant taxa at genes level:
-robust.clustering.all.steps("~/RobustClustering/David2014","~/RobustClustering/David2014/data.norm_David2014.RData",'David2014',"COLLECTION_DAY",'dominant','genus')
+robust.clustering.all.steps("~/RobustClustering/David2014","~/RobustClustering/David2014/data.norm_David2014.RData",'David2014',"COLLECTION_DAY",'dominant',percDominant=1,taxaSubsetGenus='yes')
 # Subset nonDominant taxa at genes level:
-robust.clustering.all.steps("~/RobustClustering/David2014","~/RobustClustering/David2014/data.norm_David2014.RData",'David2014',"COLLECTION_DAY",'nonDominant','genus')
+robust.clustering.all.steps("~/RobustClustering/David2014","~/RobustClustering/David2014/data.norm_David2014.RData",'David2014',"COLLECTION_DAY",'nonDominant',percDominant=1,taxaSubsetGenus='yes')
 
 
 ###########################################################

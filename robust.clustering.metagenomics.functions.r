@@ -8,6 +8,7 @@
 # robust.clustering.all.steps("~/RobustClustering/David2014","~/RobustClustering/David2014/David2014.biom",'David2014',"COLLECTION_DAY","~/RobustClustering/David2014/mapping_David2014.tsv")
 
 
+
 #####################################
 ### Function write.silhouette.output
 #####################################
@@ -35,7 +36,70 @@ write.silhouette.output <- function(ssi=NULL,si=NULL,fileName=NULL){
   sink()
 } #end-function write.silhouette.output
 
+#####################################
+### Function phyloSubset ############
+#####################################
+phyloSubset <- function(phyloOb, Var, Value){
+  remove_idx <- as.character(get_variable(phyloOb, Var)) == as.character(Value)
+  filteredOb <- prune_samples(remove_idx, phyloOb)
+  return(filteredOb)
+} # end-function phyloSubset
 
+######################################
+### Function normalize.one.subject ###
+######################################
+normalize.one.subject <- function(phyloObject){
+  
+  otutablePrenormfile <- "otuprenorm.tsv"
+  otutablePostnormfile <- "otunormalized.tsv"
+  
+  #phyloObject <- prune_taxa(taxa_sums(phyloObject) > 0, phyloObject)
+  
+  otuTablePrenorm <- as.matrix(t(otu_table(phyloObject)))
+  write.table(otuTablePrenorm,otutablePrenormfile,quote=FALSE,sep='\t',col.names=FALSE,row.names=FALSE)
+  
+  # Call to python script to apply the normalization computed by [David,2014]:
+  print ("Applying normalization (David et al., 2014)...")
+  pycmd <- paste("python ../normalize_David2014.py -i", otutablePrenormfile,"-o", otutablePostnormfile)
+  system(pycmd)
+  
+  dfPostnorm <- read.table(otutablePostnormfile,sep='\t')
+  # To put the names from otuTablePrenorm
+  rownames(dfPostnorm) <- colnames(otu_table(phyloObject))
+  colnames(dfPostnorm) <- rownames(otu_table(phyloObject))
+  otuTablePostnorm <- t(data.matrix(dfPostnorm[1:(nrow(dfPostnorm)),1:(ncol(dfPostnorm))]))
+  OTU <- otu_table(otuTablePostnorm,taxa_are_rows=TRUE)
+  data.norm <- phyloseq(OTU, tax_table(phyloObject), sample_data(phyloObject))
+  
+  rm(otutablePrenormfile,otutablePostnormfile)
+  return(data.norm) 
+} # end-function normalize.by.subject
+
+#####################################
+### Function normalize ##############
+#####################################
+normalize <- function(phyloObject,subjectVar){
+  # Example: subjectVar = 'host_subject_id'
+  
+  # It is not required to sort by temporal sequence, because the normalization is done
+  #in time points in random order.
+  
+  # To split by subject
+  count=1
+  for (sbj in levels(get_variable(phyloObject,subjectVar))){
+    # To normalize one independent subject
+    phylo.oneSubject <- phyloSubset(phyloObject, subjectVar, sbj)
+    phylo.oneSubject.norm <- normalize.one.subject(phylo.oneSubject)
+    # To save all phyloseq object together
+    if(count==1){
+      totObject=phylo.oneSubject.norm
+    }else{
+      totObject <- merge_phyloseq(totObject,phylo.oneSubject.norm) 
+    } # end-else
+    count=count+1
+  } # end-for
+  return(totObject)
+} # end-function normalize
 
 ################################################################
 ### Function plot.robust.clustering.all.together.formatted   ###
@@ -194,6 +258,90 @@ plot.robust.clustering.onlyPAM.formatted <- function(eval.array4d){
 } #end-function-plot.robust.clustering.onlyPAM.formatted
 
 ################################################################
+### Function plot.robust.clustering.onlyPAM.formatted.title  ###
+################################################################
+# Plots different summary graphs, with the results of the different clustering procedures,
+# combined in one output file (robustClustering_allTogether_formatted.pdf).
+#
+# Args:
+#   eval.array4d: 4-dimensions array with clustering results, returned by robust.clustering() function.
+#   title: text to appear in the top of the graphs.
+plot.robust.clustering.onlyPAM.formatted.title <- function(eval.array4d,title){
+  library(grid)  
+  library(gridExtra)  
+  #library(cowplot)  
+  
+  plots<- list()
+  # To join in a data.frame the selected metrics for each graph:
+  #for (alg in c('pam','hclust')){
+  alg='pam'
+  for (score in c('SI','PS','Jaccard')){
+    assFrame <- NULL
+    assFrame <- data.frame(k=2:10, JSD=eval.array4d[,score,'jsd',alg], rJSD=eval.array4d[,score,'rjsd',alg], BrayCurtis=eval.array4d[,score,'bray',alg], MorisitaHorn=eval.array4d[,score,'horn',alg], Kulczynski=eval.array4d[,score,'kulczynski',alg])
+    assFrame <- melt(assFrame, id.vars=c("k"), variable.name="metric", value.name="score")
+    gp <-NULL
+    if(score=='SI'){
+      gp <- (ggplot(assFrame, aes(x=k, y=score, color=metric)) +
+               geom_point(aes(shape=metric),size=3) + geom_line(aes(linetype=metric),size=0.75) +
+               theme_bw() + # background grey to white, and re-initialize all associated parameters
+               scale_x_continuous(breaks=2:10, labels=2:10) +
+               coord_cartesian(ylim = c(0,1)) +
+               geom_hline(yintercept = 0.25, linetype=2, size=1) + 
+               geom_hline(yintercept = 0.50, linetype=2, size=1) + 
+               #ggtitle(paste(toupper(alg),score,sep=' - ')) +
+               ggtitle(score) +
+               theme(text = element_text(size = 20)) # increase all font size
+             # + geom_errorbar(aes(x = 3, y = 0.9, ymin = 0.9 - sd, ymax = 0.9 + sd), colour = 'red', width = 0.4)
+      ) #end-gplot
+    }else if(score=="PS"){
+      gp <- (ggplot(assFrame, aes(x=k, y=score, color=metric)) +
+               theme_bw() +
+               geom_point(aes(shape=metric),size=3) + geom_line(aes(linetype=metric),size=0.75) +
+               scale_x_continuous(breaks=2:10, labels=2:10) +
+               coord_cartesian(ylim = c(0,1)) +
+               geom_hline(yintercept = 0.8, linetype=2, size=1) + 
+               #ggtitle(paste(toupper(alg),score,sep=' - ')) +
+               ggtitle(score) +
+               theme(text = element_text(size = 20))
+      ) #end-gplot
+    }else{
+      gp <- (ggplot(assFrame, aes(x=k, y=score, color=metric)) +
+               theme_bw() +
+               geom_point(aes(shape=metric),size=3) + geom_line(aes(linetype=metric),size=0.75) +
+               scale_x_continuous(breaks=2:10, labels=2:10) +
+               coord_cartesian(ylim = c(0,1)) +
+               geom_hline(yintercept = 0.75, linetype=2, size=1) + 
+               #ggtitle(paste(toupper(alg),score,sep=' - ')) +
+               ggtitle(score) +
+               theme(text = element_text(size = 20))
+      ) #end-gplot
+    } # end-if
+    plots=c(plots,list(gp))
+  } #end-for-score
+  #} #end-for-alg
+  
+  # Print one combined legend at the bottom.
+  pdf("robustClustering_onlyPAM_formatted.pdf",width=12,height=4)
+  g <- ggplotGrob(plots[[1]] + theme(legend.position="bottom"))$grobs
+  legend <- g[[which(sapply(g, function(x) x$name) == "guide-box")]]
+  lheight <- sum(legend$height)
+  lwidth <- sum(legend$width)
+  
+  gl <- lapply(plots, function(x) x + theme(legend.position="none"))
+  gl=c(gl,list(nrow=1))
+  combined<-arrangeGrob(do.call(arrangeGrob, gl),
+                        legend,
+                        top = textGrob(title, vjust = 0.5, gp = gpar(fontface = "bold", cex = 2)),
+                        ncol = 1,
+                        nrow = 2,
+                        #heights = unit.c(unit(1, "npc") - lheight, lheight))
+                        heights = unit.c(unit(1, "npc") - lheight -lheight, lheight))
+  grid.draw(combined)
+  dev.off()
+  #graphics.off()
+} #end-function-plot.robust.clustering.onlyPAM.formatted.title
+
+################################################################
 ### Function plot.robust.clustering.onlyHCLUST.formatted     ###
 ################################################################
 # Plots different summary graphs, with the results of the different clustering procedures,
@@ -270,6 +418,90 @@ plot.robust.clustering.onlyHCLUST.formatted <- function(eval.array4d){
   dev.off()
   #graphics.off()
 } #end-function-plot.robust.clustering.onlyHCLUST.formatted
+
+##################################################################
+### Function plot.robust.clustering.onlyHCLUST.formatted.title ###
+##################################################################
+# Plots different summary graphs, with the results of the different clustering procedures,
+# combined in one output file (robustClustering_allTogether_formatted.pdf).
+#
+# Args:
+#   eval.array4d: 4-dimensions array with clustering results, returned by robust.clustering() function.
+#   title: text to appear in the top of the graphs.
+plot.robust.clustering.onlyHCLUST.formatted.title <- function(eval.array4d,title){
+  library(grid)  
+  library(gridExtra)  
+  #library(cowplot)  
+  
+  plots<- list()
+  # To join in a data.frame the selected metrics for each graph:
+  #for (alg in c('pam','hclust')){
+  alg='hclust'
+  for (score in c('SI','PS','Jaccard')){
+    assFrame <- NULL
+    assFrame <- data.frame(k=2:10, JSD=eval.array4d[,score,'jsd',alg], rJSD=eval.array4d[,score,'rjsd',alg], BrayCurtis=eval.array4d[,score,'bray',alg], MorisitaHorn=eval.array4d[,score,'horn',alg], Kulczynski=eval.array4d[,score,'kulczynski',alg])
+    assFrame <- melt(assFrame, id.vars=c("k"), variable.name="metric", value.name="score")
+    gp <-NULL
+    if(score=='SI'){
+      gp <- (ggplot(assFrame, aes(x=k, y=score, color=metric)) +
+               geom_point(aes(shape=metric),size=3) + geom_line(aes(linetype=metric),size=0.75) +
+               theme_bw() + # background grey to white, and re-initialize all associated parameters
+               scale_x_continuous(breaks=2:10, labels=2:10) +
+               coord_cartesian(ylim = c(0,1)) +
+               geom_hline(yintercept = 0.25, linetype=2, size=1) + 
+               geom_hline(yintercept = 0.50, linetype=2, size=1) + 
+               #ggtitle(paste(toupper(alg),score,sep=' - ')) +
+               ggtitle(score) +
+               theme(text = element_text(size = 20)) # increase all font size
+             # + geom_errorbar(aes(x = 3, y = 0.9, ymin = 0.9 - sd, ymax = 0.9 + sd), colour = 'red', width = 0.4)
+      ) #end-gplot
+    }else if(score=="PS"){
+      gp <- (ggplot(assFrame, aes(x=k, y=score, color=metric)) +
+               theme_bw() +
+               geom_point(aes(shape=metric),size=3) + geom_line(aes(linetype=metric),size=0.75) +
+               scale_x_continuous(breaks=2:10, labels=2:10) +
+               coord_cartesian(ylim = c(0,1)) +
+               geom_hline(yintercept = 0.8, linetype=2, size=1) + 
+               #ggtitle(paste(toupper(alg),score,sep=' - ')) +
+               ggtitle(score) +
+               theme(text = element_text(size = 20))
+      ) #end-gplot
+    }else{
+      gp <- (ggplot(assFrame, aes(x=k, y=score, color=metric)) +
+               theme_bw() +
+               geom_point(aes(shape=metric),size=3) + geom_line(aes(linetype=metric),size=0.75) +
+               scale_x_continuous(breaks=2:10, labels=2:10) +
+               coord_cartesian(ylim = c(0,1)) +
+               geom_hline(yintercept = 0.75, linetype=2, size=1) + 
+               #ggtitle(paste(toupper(alg),score,sep=' - ')) +
+               ggtitle(score) +
+               theme(text = element_text(size = 20))
+      ) #end-gplot
+    } # end-if
+    plots=c(plots,list(gp))
+  } #end-for-score
+  #} #end-for-alg
+  
+  # Print one combined legend at the bottom.
+  pdf("robustClustering_onlyHCLUST_formatted.pdf",width=12,height=4)
+  g <- ggplotGrob(plots[[1]] + theme(legend.position="bottom"))$grobs
+  legend <- g[[which(sapply(g, function(x) x$name) == "guide-box")]]
+  lheight <- sum(legend$height)
+  lwidth <- sum(legend$width)
+  
+  gl <- lapply(plots, function(x) x + theme(legend.position="none"))
+  gl=c(gl,list(nrow=1))
+  combined<-arrangeGrob(do.call(arrangeGrob, gl),
+                        legend,
+                        top = textGrob(title, vjust = 0.5, gp = gpar(fontface = "bold", cex = 2)),
+                        ncol = 1,
+                        nrow = 2,
+                        #heights = unit.c(unit(1, "npc") - lheight, lheight))
+                        heights = unit.c(unit(1, "npc") - lheight -lheight, lheight))
+  grid.draw(combined)
+  dev.off()
+  #graphics.off()
+} #end-function-plot.robust.clustering.onlyHCLUST.formatted.tilte
 
 ####################################
 ### Function robust.clustering   ###
@@ -570,6 +802,56 @@ robust.clustering.decision <- function(data.now=NULL,eval.array4d=NULL,var.color
   return(data.norm)
 } # end-function robust.clustering.decision
 
+############################################
+### Function stateSubjectSerie           ###
+############################################
+# Computes the time serie of cluster for a subject
+stateSubjectSerie <- function(phyloData, subject,  timeStepId, subjectId="Subject"){
+  sample_data(phyloData)$timeStep <- as.factor(get_variable(phyloData,timeStepId))
+  
+  subject.data <- phyloSubset(phyloData,subjectId,subject)
+  timeSlotsIdx <- order(get_variable(subject.data,timeStepId))
+  
+  clusSerie <- sample_data(subject.data)[,c(timeStepId,"cluster")]
+  sortedSerie <- clusSerie[timeSlotsIdx,]
+  #print(sortedSerie)
+  return(as.character(sortedSerie$cluster))
+} # end-function stateSubjectSerie
+
+############################################
+### Function stateSerieTable             ###
+############################################
+# Computes the table Time X Subjects representing the state serie progression of subjects
+stateSerieTable <- function(phyloData, timeStepId, subjectId="Subject", dirout=diroutput){
+  sample_data(phyloData)$timeStep <- as.factor(get_variable(phyloData,timeStepId))
+  list.subjects <- unique(sort(get_variable(phyloData, subjectId)))
+  list.series <- lapply(list.subjects, stateSubjectSerie, phyloData = phyloData, 
+                        timeStepId = timeStepId, subjectId= subjectId)
+  maxlen <- max(sapply(list.series,length))
+  tableserie <- sapply(list.series, function(x){c(x)[1:maxlen]})
+  colnames(tableserie) <- list.subjects
+  return(tableserie)
+} # end-function stateSerieTable
+
+############################################
+### Function timeSerieHeatMap            ###
+############################################
+# Plot state sequence time series diagram
+timeSerieHeatMap <- function(tableSerie, dirouput, fname){
+  if(missing(fname)){
+    fname <- "StateSequence_heatmap.pdf"
+  }
+  pdf(paste(dirouput,fname, sep=""))
+  
+  graph.data <- melt(tableSerie)
+  colnames(graph.data) <- c("Time","Subject","State")
+  graph.data$State <- as.factor(graph.data$State)
+  
+  heatmg <- ggplot(graph.data, aes(x=Time, y=Subject, fill=State)) + geom_tile()
+  print(heatmg)
+  
+  dev.off()
+} # end-function timeSerieHeatMap
 
 
 ############################################
@@ -585,14 +867,14 @@ robust.clustering.decision <- function(data.now=NULL,eval.array4d=NULL,var.color
 #     If it is a .biom file, the 5th argument is also required, because the .biom file will have only the OTU counts, which must be already normalized too!!
 #   dataset.name: used as label and suffix of files. Example: 'David2014', 'Chicks', etc.
 #   variable.in.PCoAgraph: name of a variable from sample_variables() in the phyloseq object, for the color of the samples in the PCoAgraph.
-#   taxaSubsetDominant: string to determine if the taxa should be subsetted according to dominant taxa: 'all' (default), 'dominant' or 'nonDominant'
 #   taxaSubsetGenus: string to determine if taxa should be aggregated at genus level: 'no' (default), 'yes' (compatible with dominant/nonDominant in taxaSubsetDominant parameter)
+#   taxaSubsetDominant: string to determine if the taxa should be subsetted according to dominant taxa: 'all' (default), 'dominant' or 'nonDominant'
 #   mapBiomFile: Mappping file instructions (only if biom format, else mapping info is included in the phyloseq object): comma separated values file, with samples in rows, being the first column the sampleID, and the remainder with their corresponding headers in the first row. The name to color the PCoA graphs must be one of these column headers within this mapping file.
 #
 # Returns:
 #   phyloseq object with a new variable in the phyloseq object ($cluster) with the cluster identifier per sample. This object also is saved in 'data.normAndDist_definitiveClustering_<dataset.label>.RData'. It could be used as input of other R scripts with posterior steps of microbiome dynamics analysis.
 #   It also returns several text and graph files with the results.
-robust.clustering.all.steps <- function(path,RDataOrBiomFile,dataset.label,variable.in.PCoAgraph,taxaSubsetDominant='all',taxaSubsetGenus='genus',mapBiomFile){
+robust.clustering.all.steps <- function(path,RDataOrBiomFile,dataset.label,variable.in.PCoAgraph,taxaSubsetDominant='all',percDominant=1,taxaSubsetGenus='no',mapBiomFile){
   # Load libraries
   library(ggplot2,quietly=TRUE)
   library(phyloseq,quietly=TRUE)
@@ -601,7 +883,10 @@ robust.clustering.all.steps <- function(path,RDataOrBiomFile,dataset.label,varia
   library(fpc,quietly=TRUE)
   library(reshape2,quietly=TRUE) # Load the reshape2 package (for the melt() function)
   
+  rankNames=c("Kingdom","Phylum","Class","Order","Family","Genus","Species")
+  
   # A) ROBUST CLUSTERING COMPUTATION
+  setwd(path)
   # Test if phyloseq R object or biom file, depending on whether the 5th argument exists.
   if(missing(mapBiomFile)){ # RData phyloseq object
     load(RDataOrBiomFile)  
@@ -610,23 +895,37 @@ robust.clustering.all.steps <- function(path,RDataOrBiomFile,dataset.label,varia
     map<-import_qiime_sample_data(mapBiomFile)
     data.norm <- merge_phyloseq(biom.otu,map)
   } # end-if RData or biom
-  setwd(path)
   
-  # Taxa subset
-  if(taxaSubsetGenus=='genus'){
+  colnames(tax_table(data.norm))=rankNames
+  
+  tagPerc=paste(percDominant,'perc',sep='')
+  if(taxaSubsetDominant=='all'){
+    tagPerc=''
+  }
+  if(taxaSubsetGenus=='no'){
+    tagGenus=''
+  }else{
+    tagGenus='genus_'
     data.norm.genus=tax_glom(data.norm,taxrank="Genus")
     data.norm<-data.norm.genus
-  } # end-if genus taxa
+  }
+  newdir=paste(dataset.label,"_",tagGenus,taxaSubsetDominant,tagPerc,sep='')
+  dir.create(newdir)
+  setwd(newdir)
+  save(data.norm,file=paste('data.norm_',dataset.label,'_genus.RData',sep=''))
+  
+  # Taxa subset dominant/nonDominant
   switch(taxaSubsetDominant, 
     dominant={
-      data.norm.dominant=prune_taxa((taxa_sums(data.norm)/sum(otu_table(data.norm)))>=0.01,data.norm)
+      data.norm.dominant=prune_taxa((taxa_sums(data.norm)/sum(otu_table(data.norm)))>=(percDominant/100),data.norm)
       data.norm=data.norm.dominant
     },
     nonDominant={
-      data.norm.nonDominant=prune_taxa((taxa_sums(data.norm)/sum(otu_table(data.norm)))<0.01,data.norm)
+      data.norm.nonDominant=prune_taxa((taxa_sums(data.norm)/sum(otu_table(data.norm)))<(percDominant/100),data.norm)
       data.norm=data.norm.nonDominant
     }
   ) # end-switch dominant/nonDominant taxa
+  save(data.norm,file=paste('data.norm_',newdir,'.RData',sep=''))
   
   # Clustering computation
   array4d.results <- robust.clustering(data.norm,variable.in.PCoAgraph,dataset.label)
@@ -638,7 +937,7 @@ robust.clustering.all.steps <- function(path,RDataOrBiomFile,dataset.label,varia
   # C) AUTOMATIC CLUSTERING DECISION
   data.norm <- robust.clustering.decision(data.norm,eval.array4d,variable.in.PCoAgraph,dataset.label)
 
-  setwd("..")
+  setwd("../..")
   
   return(data.norm) 
 } # end-function robust.clustering.all.steps
