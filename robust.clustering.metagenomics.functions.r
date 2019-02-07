@@ -109,7 +109,8 @@ normalize <- function(phyloObject,subjectVar){
 #
 # Args:
 #   eval.array4d: 4-dimensions array with clustering results, returned by robust.clustering() function.
-plot.robust.clustering.all.together.formatted <- function(eval.array4d){
+#   maxClus: maximum number of clusters to check (integer).
+plot.robust.clustering.all.together.formatted <- function(eval.array4d,maxClus=10){
   library(grid)  
   library(gridExtra)  
   #library(cowplot)  
@@ -119,14 +120,14 @@ plot.robust.clustering.all.together.formatted <- function(eval.array4d){
   for (alg in c('pam','hclust')){
     for (score in c('SI','PS','Jaccard')){
       assFrame <- NULL
-      assFrame <- data.frame(k=2:10, JSD=eval.array4d[,score,'jsd',alg], rJSD=eval.array4d[,score,'rjsd',alg], BrayCurtis=eval.array4d[,score,'bray',alg], MorisitaHorn=eval.array4d[,score,'horn',alg], Kulczynski=eval.array4d[,score,'kulczynski',alg])
+      assFrame <- data.frame(k=2:maxClus, JSD=eval.array4d[,score,'jsd',alg], rJSD=eval.array4d[,score,'rjsd',alg], BrayCurtis=eval.array4d[,score,'bray',alg], MorisitaHorn=eval.array4d[,score,'horn',alg], Kulczynski=eval.array4d[,score,'kulczynski',alg])
       assFrame <- melt(assFrame, id.vars=c("k"), variable.name="metric", value.name="score")
       gp <-NULL
       if(score=='SI'){
         gp <- (ggplot(assFrame, aes(x=k, y=score, color=metric)) +
                  geom_point(aes(shape=metric),size=3) + geom_line(aes(linetype=metric),size=0.75) +
                  theme_bw() + # background grey to white, and re-initialize all associated parameters
-                 scale_x_continuous(breaks=2:10, labels=2:10) +
+                 scale_x_continuous(breaks=2:maxClus, labels=2:maxClus) +
                  coord_cartesian(ylim = c(0,1)) +
                  geom_hline(yintercept = 0.25, linetype=2, size=1) + 
                  geom_hline(yintercept = 0.50, linetype=2, size=1) + 
@@ -138,7 +139,7 @@ plot.robust.clustering.all.together.formatted <- function(eval.array4d){
         gp <- (ggplot(assFrame, aes(x=k, y=score, color=metric)) +
                  theme_bw() +
                  geom_point(aes(shape=metric),size=3) + geom_line(aes(linetype=metric),size=0.75) +
-                 scale_x_continuous(breaks=2:10, labels=2:10) +
+                 scale_x_continuous(breaks=2:maxClus, labels=2:maxClus) +
                  coord_cartesian(ylim = c(0,1)) +
                  geom_hline(yintercept = 0.8, linetype=2, size=1) + 
                  ggtitle(paste(toupper(alg),score,sep=' - ')) +
@@ -148,7 +149,7 @@ plot.robust.clustering.all.together.formatted <- function(eval.array4d){
         gp <- (ggplot(assFrame, aes(x=k, y=score, color=metric)) +
                  theme_bw() +
                  geom_point(aes(shape=metric),size=3) + geom_line(aes(linetype=metric),size=0.75) +
-                 scale_x_continuous(breaks=2:10, labels=2:10) +
+                 scale_x_continuous(breaks=2:maxClus, labels=2:maxClus) +
                  coord_cartesian(ylim = c(0,1)) +
                  geom_hline(yintercept = 0.75, linetype=2, size=1) + 
                  ggtitle(paste(toupper(alg),score,sep=' - ')) +
@@ -187,7 +188,8 @@ plot.robust.clustering.all.together.formatted <- function(eval.array4d){
 #
 # Args:
 #   eval.array4d: 4-dimensions array with clustering results, returned by robust.clustering() function.
-plot.robust.clustering.onlyPAM.formatted <- function(eval.array4d){
+#   maxClus: maximum number of clusters to check (integer).
+plot.robust.clustering.onlyPAM.formatted <- function(eval.array4d,maxClus=10){
   library(grid)  
   library(gridExtra)  
   #library(cowplot)  
@@ -198,14 +200,14 @@ plot.robust.clustering.onlyPAM.formatted <- function(eval.array4d){
   alg='pam'
     for (score in c('SI','PS','Jaccard')){
       assFrame <- NULL
-      assFrame <- data.frame(k=2:10, JSD=eval.array4d[,score,'jsd',alg], rJSD=eval.array4d[,score,'rjsd',alg], BrayCurtis=eval.array4d[,score,'bray',alg], MorisitaHorn=eval.array4d[,score,'horn',alg], Kulczynski=eval.array4d[,score,'kulczynski',alg])
+      assFrame <- data.frame(k=2:maxClus, JSD=eval.array4d[,score,'jsd',alg], rJSD=eval.array4d[,score,'rjsd',alg], BrayCurtis=eval.array4d[,score,'bray',alg], MorisitaHorn=eval.array4d[,score,'horn',alg], Kulczynski=eval.array4d[,score,'kulczynski',alg])
       assFrame <- melt(assFrame, id.vars=c("k"), variable.name="metric", value.name="score")
       gp <-NULL
       if(score=='SI'){
         gp <- (ggplot(assFrame, aes(x=k, y=score, color=metric)) +
                  geom_point(aes(shape=metric),size=3) + geom_line(aes(linetype=metric),size=0.75) +
                  theme_bw() + # background grey to white, and re-initialize all associated parameters
-                 scale_x_continuous(breaks=2:10, labels=2:10) +
+                 scale_x_continuous(breaks=2:maxClus, labels=2:maxClus) +
                  coord_cartesian(ylim = c(0,1)) +
                  geom_hline(yintercept = 0.25, linetype=2, size=1) + 
                  geom_hline(yintercept = 0.50, linetype=2, size=1) + 
@@ -217,7 +219,7 @@ plot.robust.clustering.onlyPAM.formatted <- function(eval.array4d){
         gp <- (ggplot(assFrame, aes(x=k, y=score, color=metric)) +
                  theme_bw() +
                  geom_point(aes(shape=metric),size=3) + geom_line(aes(linetype=metric),size=0.75) +
-                 scale_x_continuous(breaks=2:10, labels=2:10) +
+                 scale_x_continuous(breaks=2:maxClus, labels=2:maxClus) +
                  coord_cartesian(ylim = c(0,1)) +
                  geom_hline(yintercept = 0.8, linetype=2, size=1) + 
                  ggtitle(paste(toupper(alg),score,sep=' - ')) +
@@ -227,7 +229,7 @@ plot.robust.clustering.onlyPAM.formatted <- function(eval.array4d){
         gp <- (ggplot(assFrame, aes(x=k, y=score, color=metric)) +
                  theme_bw() +
                  geom_point(aes(shape=metric),size=3) + geom_line(aes(linetype=metric),size=0.75) +
-                 scale_x_continuous(breaks=2:10, labels=2:10) +
+                 scale_x_continuous(breaks=2:maxClus, labels=2:maxClus) +
                  coord_cartesian(ylim = c(0,1)) +
                  geom_hline(yintercept = 0.75, linetype=2, size=1) + 
                  ggtitle(paste(toupper(alg),score,sep=' - ')) +
@@ -266,7 +268,8 @@ plot.robust.clustering.onlyPAM.formatted <- function(eval.array4d){
 # Args:
 #   eval.array4d: 4-dimensions array with clustering results, returned by robust.clustering() function.
 #   title: text to appear in the top of the graphs.
-plot.robust.clustering.onlyPAM.formatted.title <- function(eval.array4d,title){
+#   maxClus: maximum number of clusters to check (integer).
+plot.robust.clustering.onlyPAM.formatted.title <- function(eval.array4d,title,maxClus=10){
   library(grid)  
   library(gridExtra)  
   #library(cowplot)  
@@ -277,14 +280,14 @@ plot.robust.clustering.onlyPAM.formatted.title <- function(eval.array4d,title){
   alg='pam'
   for (score in c('SI','PS','Jaccard')){
     assFrame <- NULL
-    assFrame <- data.frame(k=2:10, JSD=eval.array4d[,score,'jsd',alg], rJSD=eval.array4d[,score,'rjsd',alg], BrayCurtis=eval.array4d[,score,'bray',alg], MorisitaHorn=eval.array4d[,score,'horn',alg], Kulczynski=eval.array4d[,score,'kulczynski',alg])
+    assFrame <- data.frame(k=2:maxClus, JSD=eval.array4d[,score,'jsd',alg], rJSD=eval.array4d[,score,'rjsd',alg], BrayCurtis=eval.array4d[,score,'bray',alg], MorisitaHorn=eval.array4d[,score,'horn',alg], Kulczynski=eval.array4d[,score,'kulczynski',alg])
     assFrame <- melt(assFrame, id.vars=c("k"), variable.name="metric", value.name="score")
     gp <-NULL
     if(score=='SI'){
       gp <- (ggplot(assFrame, aes(x=k, y=score, color=metric)) +
                geom_point(aes(shape=metric),size=3) + geom_line(aes(linetype=metric),size=0.75) +
                theme_bw() + # background grey to white, and re-initialize all associated parameters
-               scale_x_continuous(breaks=2:10, labels=2:10) +
+               scale_x_continuous(breaks=2:maxClus, labels=2:maxClus) +
                coord_cartesian(ylim = c(0,1)) +
                geom_hline(yintercept = 0.25, linetype=2, size=1) + 
                geom_hline(yintercept = 0.50, linetype=2, size=1) + 
@@ -297,7 +300,7 @@ plot.robust.clustering.onlyPAM.formatted.title <- function(eval.array4d,title){
       gp <- (ggplot(assFrame, aes(x=k, y=score, color=metric)) +
                theme_bw() +
                geom_point(aes(shape=metric),size=3) + geom_line(aes(linetype=metric),size=0.75) +
-               scale_x_continuous(breaks=2:10, labels=2:10) +
+               scale_x_continuous(breaks=2:maxClus, labels=2:maxClus) +
                coord_cartesian(ylim = c(0,1)) +
                geom_hline(yintercept = 0.8, linetype=2, size=1) + 
                #ggtitle(paste(toupper(alg),score,sep=' - ')) +
@@ -308,7 +311,7 @@ plot.robust.clustering.onlyPAM.formatted.title <- function(eval.array4d,title){
       gp <- (ggplot(assFrame, aes(x=k, y=score, color=metric)) +
                theme_bw() +
                geom_point(aes(shape=metric),size=3) + geom_line(aes(linetype=metric),size=0.75) +
-               scale_x_continuous(breaks=2:10, labels=2:10) +
+               scale_x_continuous(breaks=2:maxClus, labels=2:maxClus) +
                coord_cartesian(ylim = c(0,1)) +
                geom_hline(yintercept = 0.75, linetype=2, size=1) + 
                #ggtitle(paste(toupper(alg),score,sep=' - ')) +
@@ -349,7 +352,8 @@ plot.robust.clustering.onlyPAM.formatted.title <- function(eval.array4d,title){
 #
 # Args:
 #   eval.array4d: 4-dimensions array with clustering results, returned by robust.clustering() function.
-plot.robust.clustering.onlyHCLUST.formatted <- function(eval.array4d){
+#   maxClus: maximum number of clusters to check (integer).
+plot.robust.clustering.onlyHCLUST.formatted <- function(eval.array4d,maxClus=10){
   library(grid)  
   library(gridExtra)  
   #library(cowplot)  
@@ -360,14 +364,14 @@ plot.robust.clustering.onlyHCLUST.formatted <- function(eval.array4d){
   alg='hclust'
   for (score in c('SI','PS','Jaccard')){
     assFrame <- NULL
-    assFrame <- data.frame(k=2:10, JSD=eval.array4d[,score,'jsd',alg], rJSD=eval.array4d[,score,'rjsd',alg], BrayCurtis=eval.array4d[,score,'bray',alg], MorisitaHorn=eval.array4d[,score,'horn',alg], Kulczynski=eval.array4d[,score,'kulczynski',alg])
+    assFrame <- data.frame(k=2:maxClus, JSD=eval.array4d[,score,'jsd',alg], rJSD=eval.array4d[,score,'rjsd',alg], BrayCurtis=eval.array4d[,score,'bray',alg], MorisitaHorn=eval.array4d[,score,'horn',alg], Kulczynski=eval.array4d[,score,'kulczynski',alg])
     assFrame <- melt(assFrame, id.vars=c("k"), variable.name="metric", value.name="score")
     gp <-NULL
     if(score=='SI'){
       gp <- (ggplot(assFrame, aes(x=k, y=score, color=metric)) +
                geom_point(aes(shape=metric),size=3) + geom_line(aes(linetype=metric),size=0.75) +
                theme_bw() + # background grey to white, and re-initialize all associated parameters
-               scale_x_continuous(breaks=2:10, labels=2:10) +
+               scale_x_continuous(breaks=2:maxClus, labels=2:maxClus) +
                coord_cartesian(ylim = c(0,1)) +
                geom_hline(yintercept = 0.25, linetype=2, size=1) + 
                geom_hline(yintercept = 0.50, linetype=2, size=1) + 
@@ -379,7 +383,7 @@ plot.robust.clustering.onlyHCLUST.formatted <- function(eval.array4d){
       gp <- (ggplot(assFrame, aes(x=k, y=score, color=metric)) +
                theme_bw() +
                geom_point(aes(shape=metric),size=3) + geom_line(aes(linetype=metric),size=0.75) +
-               scale_x_continuous(breaks=2:10, labels=2:10) +
+               scale_x_continuous(breaks=2:maxClus, labels=2:maxClus) +
                coord_cartesian(ylim = c(0,1)) +
                geom_hline(yintercept = 0.8, linetype=2, size=1) + 
                ggtitle(paste(toupper(alg),score,sep=' - ')) +
@@ -389,7 +393,7 @@ plot.robust.clustering.onlyHCLUST.formatted <- function(eval.array4d){
       gp <- (ggplot(assFrame, aes(x=k, y=score, color=metric)) +
                theme_bw() +
                geom_point(aes(shape=metric),size=3) + geom_line(aes(linetype=metric),size=0.75) +
-               scale_x_continuous(breaks=2:10, labels=2:10) +
+               scale_x_continuous(breaks=2:maxClus, labels=2:maxClus) +
                coord_cartesian(ylim = c(0,1)) +
                geom_hline(yintercept = 0.75, linetype=2, size=1) + 
                ggtitle(paste(toupper(alg),score,sep=' - ')) +
@@ -428,7 +432,8 @@ plot.robust.clustering.onlyHCLUST.formatted <- function(eval.array4d){
 # Args:
 #   eval.array4d: 4-dimensions array with clustering results, returned by robust.clustering() function.
 #   title: text to appear in the top of the graphs.
-plot.robust.clustering.onlyHCLUST.formatted.title <- function(eval.array4d,title){
+#   maxClus: maximum number of clusters to check (integer).
+plot.robust.clustering.onlyHCLUST.formatted.title <- function(eval.array4d,title,maxClus=10){
   library(grid)  
   library(gridExtra)  
   #library(cowplot)  
@@ -439,14 +444,14 @@ plot.robust.clustering.onlyHCLUST.formatted.title <- function(eval.array4d,title
   alg='hclust'
   for (score in c('SI','PS','Jaccard')){
     assFrame <- NULL
-    assFrame <- data.frame(k=2:10, JSD=eval.array4d[,score,'jsd',alg], rJSD=eval.array4d[,score,'rjsd',alg], BrayCurtis=eval.array4d[,score,'bray',alg], MorisitaHorn=eval.array4d[,score,'horn',alg], Kulczynski=eval.array4d[,score,'kulczynski',alg])
+    assFrame <- data.frame(k=2:maxClus, JSD=eval.array4d[,score,'jsd',alg], rJSD=eval.array4d[,score,'rjsd',alg], BrayCurtis=eval.array4d[,score,'bray',alg], MorisitaHorn=eval.array4d[,score,'horn',alg], Kulczynski=eval.array4d[,score,'kulczynski',alg])
     assFrame <- melt(assFrame, id.vars=c("k"), variable.name="metric", value.name="score")
     gp <-NULL
     if(score=='SI'){
       gp <- (ggplot(assFrame, aes(x=k, y=score, color=metric)) +
                geom_point(aes(shape=metric),size=3) + geom_line(aes(linetype=metric),size=0.75) +
                theme_bw() + # background grey to white, and re-initialize all associated parameters
-               scale_x_continuous(breaks=2:10, labels=2:10) +
+               scale_x_continuous(breaks=2:maxClus, labels=2:maxClus) +
                coord_cartesian(ylim = c(0,1)) +
                geom_hline(yintercept = 0.25, linetype=2, size=1) + 
                geom_hline(yintercept = 0.50, linetype=2, size=1) + 
@@ -459,7 +464,7 @@ plot.robust.clustering.onlyHCLUST.formatted.title <- function(eval.array4d,title
       gp <- (ggplot(assFrame, aes(x=k, y=score, color=metric)) +
                theme_bw() +
                geom_point(aes(shape=metric),size=3) + geom_line(aes(linetype=metric),size=0.75) +
-               scale_x_continuous(breaks=2:10, labels=2:10) +
+               scale_x_continuous(breaks=2:maxClus, labels=2:maxClus) +
                coord_cartesian(ylim = c(0,1)) +
                geom_hline(yintercept = 0.8, linetype=2, size=1) + 
                #ggtitle(paste(toupper(alg),score,sep=' - ')) +
@@ -470,7 +475,7 @@ plot.robust.clustering.onlyHCLUST.formatted.title <- function(eval.array4d,title
       gp <- (ggplot(assFrame, aes(x=k, y=score, color=metric)) +
                theme_bw() +
                geom_point(aes(shape=metric),size=3) + geom_line(aes(linetype=metric),size=0.75) +
-               scale_x_continuous(breaks=2:10, labels=2:10) +
+               scale_x_continuous(breaks=2:maxClus, labels=2:maxClus) +
                coord_cartesian(ylim = c(0,1)) +
                geom_hline(yintercept = 0.75, linetype=2, size=1) + 
                #ggtitle(paste(toupper(alg),score,sep=' - ')) +
@@ -503,13 +508,35 @@ plot.robust.clustering.onlyHCLUST.formatted.title <- function(eval.array4d,title
   #graphics.off()
 } #end-function-plot.robust.clustering.onlyHCLUST.formatted.tilte
 
+############################################
+### Function plot.barplot.phylum         ###
+############################################
+# Plot a barplot showing the phylum distribution in different clusters
+plot.barplot.phylum <- function(data.phyloseq){
+  data.df <- data.phyloseq  %>%
+    # agglomerate at phylum level
+    tax_glom(taxrank="Phylum") %>%  
+    # Transform to rel. abundance
+    transform_sample_counts(function(x) {x/sum(x)} ) %>% 
+    # Melt to long format
+    psmelt() %>%                
+    # Sort data frame alphabetically by phylum
+    arrange(Phylum)   
+  pdf('barplot_clusters_AggregatedByPhylum.pdf')
+  p <- ggplot(data.df, aes(x=cluster, y=Abundance, fill=Phylum)) + 
+    geom_bar(aes(), stat="identity", position="fill") +
+    ylab("Relative Abundance")
+  print(p)
+  dev.off()
+} # end-function plot.barplot.phylum
+
 ####################################
 ### Function robust.clustering   ###
 ####################################
 # Main function of the algorithm Robust Clustering in Metagenomics. It computes
 # and collect the results of all the different clustering procedures, including:
 #     2 clustering algorithms
-#   x 9 (k=2:10) potential number of clusters
+#   x 9 (k=2:maxClus) potential number of clusters
 #   x 5 distance measures
 #   x 3 assessment scores
 # 
@@ -517,23 +544,26 @@ plot.robust.clustering.onlyHCLUST.formatted.title <- function(eval.array4d,title
 #   data.norm: phyloseq object, with otu_table with relative and normalized abundances.
 #   var.color: string, variable within phyloseq object to use in the PCoA plots. Ex:"age".
 #   label: string, used as label and suffix of files and folders. Often, it is the dataset name.
+#   maxClus: maximum number of clusters to check (integer).
 #
 # Returns:
 #   4-dimensions array with clustering results.
-robust.clustering <- function(data.norm=NULL,var.color=NULL,label=NULL){
+robust.clustering <- function(data.norm=NULL,var.color=NULL,label=NULL,maxClus=10){
   # Load libraries
   library(lattice,quietly=TRUE)
   library(cluster,quietly=TRUE)
   library(fpc,quietly=TRUE)
   library(reshape2,quietly=TRUE) # Load the reshape2 package (for the melt() function)
   library(ggplot2,quietly=TRUE)
+  library(dplyr,quietly=TRUE)
   
   data.norm.backup <- data.norm
   iniSeed <- 12345
-  # 2 clustering algorithms x 9 (k=2:10) potential number of clusters x 5 distance measures x 3 assessment scores
+  # 2 clustering algorithms x 9 (k=2:maxClus) potential number of clusters x 5 distance measures x 3 assessment scores
   # Assigning values: eval.array4d['2','SI','jsd','pam']=0.2365
   # Assigning values: eval.array4d[as.character(k),score,distanceMethod,alg]
-  eval.array4d <- array(0,dim=c(9,3,5,2),dimnames=list(list('2','3','4','5','6','7','8','9','10'), list('SI','PS','Jaccard'), list('jsd','rjsd','bray','horn','kulczynski'), list('pam','hclust')))
+  #eval.array4d <- array(0,dim=c(9,3,5,2),dimnames=list(list('2','3','4','5','6','7','8','9','10'), list('SI','PS','Jaccard'), list('jsd','rjsd','bray','horn','kulczynski'), list('pam','hclust')))
+  eval.array4d <- array(0,dim=c(maxClus-1,3,5,2),dimnames=list(as.character(seq(2,maxClus,1)), list('SI','PS','Jaccard'), list('jsd','rjsd','bray','horn','kulczynski'), list('pam','hclust')))
   
   # a.- different distance measures: JSD, rootJSD, Bray-Curtis, Morisita-Horn (Horn in Vegan) and Kulczynski.
   for (distanceMethod in c("jsd", "rjsd", "bray", "horn", "kulczynski")){
@@ -578,7 +608,7 @@ robust.clustering <- function(data.norm=NULL,var.color=NULL,label=NULL){
       score='SI'  
       switch(alg,
              pam={
-               for(k in 2:10){
+               for(k in 2:maxClus){
                  fit <- pam(dist,k,diss=TRUE)
                  eval.array4d[as.character(k),score,distanceMethod,alg] <- summary(silhouette(fit))$avg.width
                } # end-for-k
@@ -586,7 +616,7 @@ robust.clustering <- function(data.norm=NULL,var.color=NULL,label=NULL){
              
              hclust={
                fit <- hclust(dist,method="average") 
-               for(k in 2:10){
+               for(k in 2:maxClus){
                  eval.array4d[as.character(k),score,distanceMethod,alg] <- summary(silhouette(cutree(fit,k=k),dist))$avg.width
                } # end-for-k
              }, # end-Hclust
@@ -598,24 +628,24 @@ robust.clustering <- function(data.norm=NULL,var.color=NULL,label=NULL){
       set.seed(iniSeed)
       switch(alg,
              # claraCBI is the interface for pam and clara. In our case, claraCBI should apply pam, since clara is not available with distance matrix as input, and we indicate clearly distance=true.
-             pam={ out.pred.str <- prediction.strength(dist, Gmin=2, Gmax=10, M=100, clustermethod=claraCBI, classification="centroid", distances=TRUE) },
-             hclust={ out.pred.str <- prediction.strength(dist, Gmin=2, Gmax=10, M=100, clustermethod=disthclustCBI,method="average", classification="averagedist", distances=TRUE) }
+             pam={ out.pred.str <- prediction.strength(dist, Gmin=2, Gmax=maxClus, M=100, clustermethod=claraCBI, classification="centroid", distances=TRUE) },
+             hclust={ out.pred.str <- prediction.strength(dist, Gmin=2, Gmax=maxClus, M=100, clustermethod=disthclustCBI,method="average", classification="averagedist", distances=TRUE) }
       ) #end-switch-alg
-      eval.array4d[,score,distanceMethod,alg] <- out.pred.str$mean.pred[2:10]
+      eval.array4d[,score,distanceMethod,alg] <- out.pred.str$mean.pred[2:maxClus]
       
       ## C.-Metric Jaccard: Jaccard similarity after resampling
       # With 'boot' (multiple points or not?) or with 'subset'? They are the only two bootmethods working with dissimilarity matrix. --> boot is selected, as the default method, with the default options (omitting multiple points in the computation of the Jaccard index).
       score='Jaccard'
       switch(alg,
              pam={
-               for(k in 2:10){
+               for(k in 2:maxClus){
                  cf <- clusterboot(dist,B=100,distances=TRUE,bootmethod="boot",clustermethod=claraCBI,k=k,seed=iniSeed,count=FALSE)
                  eval.array4d[as.character(k),score,distanceMethod,alg] <- mean(cf$bootmean)
                  ## sd(cf$bootmean)
                } # end-for-k
              }, # end-Pam
              hclust={ 
-               for(k in 2:10){
+               for(k in 2:maxClus){
                  cf <- clusterboot(dist,B=100,distances=TRUE,bootmethod="boot",clustermethod=disthclustCBI,method='average',k=k,seed=iniSeed,count=FALSE)
                  eval.array4d[as.character(k),score,distanceMethod,alg] <- mean(cf$bootmean)
                } # end-for-k
@@ -626,7 +656,7 @@ robust.clustering <- function(data.norm=NULL,var.color=NULL,label=NULL){
       # Computes the results with the best SI, with both algorithm,  without comparison between different distances, just as additional information in output files.
       switch(alg, # Switch computes 'k' and 'si' for different algorithms
              pam={
-               fit <- pamk(dist,krange=2:10,diss=TRUE)
+               fit <- pamk(dist,krange=2:maxClus,diss=TRUE)
                k <- fit$nc
                if(k==1){
                 si <- 0 
@@ -637,7 +667,7 @@ robust.clustering <- function(data.norm=NULL,var.color=NULL,label=NULL){
              }, # end-pam
              hclust={ 
                fit <- hclust(dist,method="average")
-               my.k.choices <- 2:10
+               my.k.choices <- 2:maxClus
                current.avgWidth <- 0
                for (ii in (1:length(my.k.choices)) ){
                  new.avgWidth <- summary(silhouette(cutree(fit,k=my.k.choices[ii]),dist))$avg.width
@@ -668,7 +698,7 @@ robust.clustering <- function(data.norm=NULL,var.color=NULL,label=NULL){
 ###########################################
 # Automatically decides the grouping in states/clusters. According the following
 # criteria:
-#   a.- to select the “k” with the highest average SI (in 2-10) in 2 measures
+#   a.- to select the “k” with the highest average SI (in 2-maxClus) in 2 measures
 #   b.- to check if this “k” value pass the PS limits (i.e. to be robust) or if those “k” clusters are stable according Jaccard threshold from bootstrapping process
 #
 # Args:
@@ -676,19 +706,21 @@ robust.clustering <- function(data.norm=NULL,var.color=NULL,label=NULL){
 #  eval.array4d: 4-dimensions array with clustering results, returned by robust.clustering() function.
 #  var.color: string, variable within phyloseq object to use in the PCoA plots. Ex:"age".
 #  label: string, used as label and suffix of files and folders. Often, it is the dataset name.
+#   maxClus: maximum number of clusters to check (integer).
 #
 # Returns:
 #   Phyloseq object with the cluster assigned to each sample, in a new variable.
-robust.clustering.decision <- function(data.now=NULL,eval.array4d=NULL,var.color=NULL,label=NULL){
+robust.clustering.decision <- function(data.now=NULL,eval.array4d=NULL,var.color=NULL,label=NULL,maxClus=10){
   thresh.SI <- 0.25
   thresh.PS <- 0.80
   thresh.Jac <- 0.75
   
   # 1.- Compute the mean of all possible combinations of 2 SI values, per each independent k
   combi<-combn(c("jsd", "rjsd", "bray", "horn", "kulczynski"),2)
-  avgSI <- array(0,dim=c(9,10),dimnames=list(list('2','3','4','5','6','7','8','9','10'), list('1','2','3','4','5','6','7','8','9','10')))
-  for(k in 2:10){
-    for(i in 1:10){ #10 combinations of methods in combi
+  avgSI <- array(0,dim=c(maxClus-1,maxClus),dimnames=list(as.character(seq(2,maxClus,1)), as.character(seq(1,maxClus,1))))
+  
+  for(k in 2:maxClus){
+    for(i in 1:ncol(combi)){ #10 combinations of methods in combi
       si1=eval.array4d[as.character(k),'SI',combi[1,i],'pam']
       si2=eval.array4d[as.character(k),'SI',combi[2,i],'pam']
       if((si1<thresh.SI) || (si2<thresh.SI)){
@@ -797,10 +829,16 @@ robust.clustering.decision <- function(data.now=NULL,eval.array4d=NULL,var.color
     df.allVariables <- get_variable(data.now)
     df.clusterPerSample <- df.allVariables[,c('sampleID','cluster')]
     write.table(df.clusterPerSample,paste('sampleId-cluster_pairs_',label,'.txt',sep=''),quote=FALSE,sep=',',row.names=FALSE)
+    
+    # Print phylum distribution barplot
+    plot.barplot.phylum(data.norm)
   } # end-if all threshold are satisfied
   
   return(data.norm)
 } # end-function robust.clustering.decision
+
+
+
 
 ############################################
 ### Function stateSubjectSerie           ###
@@ -874,7 +912,7 @@ timeSerieHeatMap <- function(tableSerie, dirouput, fname){
 # Returns:
 #   phyloseq object with a new variable in the phyloseq object ($cluster) with the cluster identifier per sample. This object also is saved in 'data.normAndDist_definitiveClustering_<dataset.label>.RData'. It could be used as input of other R scripts with posterior steps of microbiome dynamics analysis.
 #   It also returns several text and graph files with the results.
-robust.clustering.all.steps <- function(path,RDataOrBiomFile,dataset.label,variable.in.PCoAgraph,taxaSubsetDominant='all',percDominant=1,taxaSubsetGenus='no',mapBiomFile){
+robust.clustering.all.steps <- function(path,RDataOrBiomFile,dataset.label,variable.in.PCoAgraph,taxaSubsetDominant='all',percDominant=1,taxaSubsetGenus='no',mapBiomFile,maxClus=10){
   # Load libraries
   library(ggplot2,quietly=TRUE)
   library(phyloseq,quietly=TRUE)
@@ -928,14 +966,14 @@ robust.clustering.all.steps <- function(path,RDataOrBiomFile,dataset.label,varia
   save(data.norm,file=paste('data.norm_',newdir,'.RData',sep=''))
   
   # Clustering computation
-  array4d.results <- robust.clustering(data.norm,variable.in.PCoAgraph,dataset.label)
+  array4d.results <- robust.clustering(data.norm,variable.in.PCoAgraph,dataset.label,maxClus)
 
   # B) PLOT GRAPHS
   load(paste('eval.arrays_',dataset.label,'.RData',sep=''))
-  plot.robust.clustering.all.together.formatted(eval.array4d)
+  plot.robust.clustering.all.together.formatted(eval.array4d,maxClus)
 
   # C) AUTOMATIC CLUSTERING DECISION
-  data.norm <- robust.clustering.decision(data.norm,eval.array4d,variable.in.PCoAgraph,dataset.label)
+  data.norm <- robust.clustering.decision(data.norm,eval.array4d,variable.in.PCoAgraph,dataset.label,maxClus)
 
   setwd("../..")
   

@@ -41,6 +41,7 @@ The file 'robust.clustering.metagenomics_callsExampleDatasets.r' includes cases 
   6. [Optional/Mandatory if **taxaSubsetDominant** is used: **percDominant**: percentage of dominant taxa to subset. Possible values: 0.1 to 99.9.]
   7. [Optional: **taxaSubsetGenus**: string to determine if taxa should be aggregated at genus level. Possible values: 'no' (default), 'yes' (compatible with dominant/nonDominant in taxaSubsetDominant parameter).]
   8. [Optional: **mapBiomFile**: mappping file instructions (only if biom format, else mapping info is included in the phyloseq object): comma separated values file, with samples in rows, being the first column the sampleID, and the remainder with their corresponding headers in the first row. The name to color the PCoA graphs must be one of these column headers within this mapping file.]
+  9. [Optional: **maxClus**: (Default=10) maximum number of clusters to check. Recommended to preserve the default value to about overfitting.]
 
 OUTPUTS:
   - phyloseq object with a new variable in the phyloseq object ($cluster) with the cluster identifier per sample. This object also is saved in 'data.normAndDist\_definitiveClustering\_\<dataset.label\>.RData'. It could be used as input of other R scripts with posterior steps of microbiome dynamics analysis.
