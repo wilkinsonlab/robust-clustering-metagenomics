@@ -717,7 +717,7 @@ robust.clustering.decision <- function(data.now=NULL,eval.array4d=NULL,var.color
   
   # 1.- Compute the mean of all possible combinations of 2 SI values, per each independent k
   combi<-combn(c("jsd", "rjsd", "bray", "horn", "kulczynski"),2)
-  avgSI <- array(0,dim=c(maxClus-1,maxClus),dimnames=list(as.character(seq(2,maxClus,1)), as.character(seq(1,maxClus,1))))
+  avgSI <- array(0,dim=c(maxClus-1,ncol(combi)),dimnames=list(as.character(seq(2,maxClus,1)), as.character(seq(1,ncol(combi),1))))
   
   for(k in 2:maxClus){
     for(i in 1:ncol(combi)){ #10 combinations of methods in combi
