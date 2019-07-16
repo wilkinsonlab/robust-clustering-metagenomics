@@ -4,6 +4,10 @@ This pipeline, implemented in R, corresponds to an algorithm to automatically id
 
 The input are Operational Taxonomic Unit (OTU) vectors (in phyloseq or biom format, as it is explained below). The key consideration for grouping similar OTU vectors is according to Machine Learning clustering approaches, taking metagenomics beta diversity metrics as distance measures between samples. The procedure robustly defines the optimal number of clusters based on a comparison between several distance measures, distinct algorithms and different clustering scores. The variable factors that are combined to generate the robustness of our algorithm include: five different distance measures (JSD, rJSD, Bray-Curtis, Morisita-Horn and Kulczynski), two clustering scored (SI and Prediction Strength (PS) scores) followed by an additional bootstrapping process (evaluated with the Jaccard similarity score), and two distinct clustering approaches (PAM and Hclust). Additionally, different subsets of taxa could be considered ({all, dominant, nonDominant} x {species, genus level}.
 
+**Citation**: Please, cite us when you use our pipeline in your work:  
+
+**Beatriz García-Jiménez, Mark D. Wilkinson; Robust and automatic definition of microbiome states, PeerJ, 7:e6657, 2019, [doi: 10.7717/peerj.6657](https://doi.org/10.7717/peerj.6657)**
+
 
 ## Basic Usage ##
 
